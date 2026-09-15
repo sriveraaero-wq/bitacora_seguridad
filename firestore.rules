@@ -1,0 +1,22 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Hallazgos / condiciones inseguras
+    match /reportes/{reportId} {
+      allow read, write: if true;
+    }
+
+    // Supervisores dados de alta por el administrador
+    match /usuarios/{userEmail} {
+      allow read, write: if true;
+    }
+
+    // Contraseña de administrador (hasheada)
+    match /config/{docId} {
+      allow read, write: if true;
+    }
+
+    // Todo lo demás queda bloqueado por defecto
+  }
+}
