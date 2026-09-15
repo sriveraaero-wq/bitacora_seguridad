@@ -1,0 +1,1698 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bitácora de Seguridad</title>
+<link rel="manifest" href="./manifest.json">
+<meta name="theme-color" content="#14213D">
+<link rel="icon" href="./icons/icon-192.png">
+<link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Bitácora">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="firebase-config.js"></script>
+<style>
+  :root{
+    --ink:#14213D;
+    --ink-2:#1E2F52;
+    --paper:#F5F4F0;
+    --card:#FFFFFF;
+    --line:#DEDAD0;
+    --text:#1B1B18;
+    --muted:#6E6C64;
+    --yellow:#FFC629;
+    --yellow-ink:#2B1E00;
+    --risk-bajo:#3E8E41;
+    --risk-medio:#D98A00;
+    --risk-alto:#D2481F;
+    --risk-critico:#A0201A;
+    --radius:3px;
+    --font-display:'Barlow Condensed',sans-serif;
+    --font-body:'IBM Plex Sans',sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--paper);
+    color:var(--text);
+    font-family:var(--font-body);
+    -webkit-font-smoothing:antialiased;
+    min-height:100vh;
+  }
+  @media (prefers-reduced-motion: reduce){
+    *{animation-duration:0.001ms !important; transition-duration:0.001ms !important;}
+  }
+  a{color:inherit;}
+  button{font-family:inherit;}
+  :focus-visible{outline:2px solid var(--ink); outline-offset:2px;}
+
+  /* ---------- Header ---------- */
+  header{
+    position:sticky; top:0; z-index:20;
+    background:var(--ink);
+    color:#fff;
+    border-bottom:5px solid var(--yellow);
+  }
+  .header-inner{
+    max-width:920px; margin:0 auto;
+    padding:14px 18px;
+    display:flex; align-items:center; justify-content:space-between;
+    gap:12px;
+  }
+  .brand{display:flex; align-items:center; gap:10px; min-width:0;}
+  .brand-mark{
+    width:10px; height:34px; background:var(--yellow); flex-shrink:0;
+  }
+  .brand-text h1{
+    font-family:var(--font-display); font-weight:700; font-size:1.5rem;
+    line-height:1; margin:0; letter-spacing:0.2px;
+  }
+  .brand-text p{
+    margin:2px 0 0; font-size:0.75rem; color:#C9CFE0; letter-spacing:0.2px;
+  }
+  .btn-new{
+    background:var(--yellow); color:var(--yellow-ink);
+    border:none; border-radius:var(--radius);
+    font-family:var(--font-display); font-weight:700; font-size:1.05rem;
+    padding:10px 16px; cursor:pointer; white-space:nowrap;
+    display:flex; align-items:center; gap:6px;
+    transition:transform 0.12s ease, background 0.12s ease;
+  }
+  .btn-new:hover{background:#FFD35C;}
+  .btn-new:active{transform:scale(0.97);}
+  .btn-new svg{width:18px; height:18px; flex-shrink:0;}
+  .header-actions{display:flex; align-items:center; gap:10px; flex-wrap:wrap; justify-content:flex-end;}
+  .user-badge{
+    display:flex; align-items:center; gap:8px; font-size:0.85rem; color:#E7EAF3;
+  }
+  .user-badge .who{font-weight:600; color:#fff;}
+  .user-badge .role-tag{
+    font-size:0.68rem; text-transform:uppercase; letter-spacing:0.4px;
+    background:rgba(255,255,255,0.14); padding:2px 7px; border-radius:999px;
+  }
+  .btn-ghost{
+    background:transparent; border:1px solid rgba(255,255,255,0.35); color:#fff;
+    border-radius:var(--radius); padding:8px 12px; font-size:0.85rem; cursor:pointer;
+  }
+  .btn-ghost:hover{background:rgba(255,255,255,0.1);}
+
+  /* ---------- Login ---------- */
+  .login-wrap{
+    min-height:calc(100vh - 90px); display:flex; align-items:center; justify-content:center;
+    padding:30px 16px;
+  }
+  .login-card{
+    background:var(--card); border:1px solid var(--line); border-radius:var(--radius);
+    padding:26px 24px; max-width:380px; width:100%;
+    border-top:5px solid var(--yellow);
+  }
+  .login-card h2{font-family:var(--font-display); font-size:1.5rem; margin:0 0 4px;}
+  .login-card .sub{font-size:0.85rem; color:var(--muted); margin:0 0 18px;}
+  .login-tabs{display:flex; border:1px solid var(--line); border-radius:var(--radius); margin-bottom:18px; overflow:hidden;}
+  .login-tabs button{
+    flex:1; padding:9px; background:var(--paper); border:none; cursor:pointer;
+    font-size:0.85rem; color:var(--muted); font-weight:600;
+  }
+  .login-tabs button.active{background:var(--ink); color:#fff;}
+  .pw-field{position:relative;}
+  .pw-field input{padding-right:40px !important;}
+  .pw-toggle{
+    position:absolute; right:8px; top:50%; transform:translateY(-50%);
+    background:none; border:none; cursor:pointer; color:var(--muted); font-size:0.78rem;
+    padding:4px;
+  }
+  .login-error{
+    background:#FBE9E7; border:1px solid var(--risk-critico); color:var(--risk-critico);
+    padding:8px 12px; border-radius:var(--radius); font-size:0.82rem; margin-bottom:12px; display:none;
+  }
+  .login-error.show{display:block;}
+  .setup-note{
+    font-size:0.8rem; color:var(--muted); background:var(--paper); border:1px dashed var(--line);
+    padding:10px 12px; border-radius:var(--radius); margin-bottom:16px;
+  }
+
+  /* ---------- Admin panel ---------- */
+  .user-row{
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    background:var(--card); border:1px solid var(--line); border-radius:var(--radius);
+    padding:12px 14px; margin-bottom:10px;
+  }
+  .user-row .info .name{font-weight:600; font-size:0.98rem;}
+  .user-row .info .email{font-size:0.82rem; color:var(--muted);}
+  .user-row .actions{display:flex; gap:8px; flex-shrink:0;}
+  .icon-btn{
+    background:var(--paper); border:1px solid var(--line); border-radius:var(--radius);
+    width:34px; height:34px; display:flex; align-items:center; justify-content:center; cursor:pointer;
+  }
+  .icon-btn svg{width:16px; height:16px;}
+  .icon-btn.danger{color:var(--risk-critico); border-color:var(--risk-critico);}
+
+  /* ---------- Layout ---------- */
+  main{max-width:920px; margin:0 auto; padding:20px 16px 80px;}
+  .view{display:none;}
+  .view.active{display:block;}
+
+  /* ---------- Toolbar / filters ---------- */
+  .toolbar{
+    display:flex; flex-wrap:wrap; gap:10px; margin-bottom:18px;
+  }
+  .search-box{
+    flex:1 1 220px; position:relative;
+  }
+  .search-box input{
+    width:100%; padding:10px 12px 10px 34px;
+    border:1px solid var(--line); border-radius:var(--radius);
+    background:var(--card); font-size:0.95rem; color:var(--text);
+  }
+  .search-box svg{
+    position:absolute; left:10px; top:50%; transform:translateY(-50%);
+    width:16px; height:16px; color:var(--muted);
+  }
+  select.filter-select{
+    padding:10px 12px; border:1px solid var(--line); border-radius:var(--radius);
+    background:var(--card); font-size:0.9rem; color:var(--text);
+  }
+  .status-tabs{
+    display:flex; gap:6px; flex-wrap:wrap; margin-bottom:14px;
+  }
+  .status-tabs button{
+    border:1px solid var(--line); background:var(--card); color:var(--muted);
+    padding:7px 13px; border-radius:999px; font-size:0.85rem; cursor:pointer;
+    transition:background 0.12s ease, color 0.12s ease, border-color 0.12s ease;
+  }
+  .status-tabs button.active{
+    background:var(--ink); color:#fff; border-color:var(--ink);
+  }
+
+  /* ---------- Report cards ---------- */
+  .report-grid{display:grid; grid-template-columns:1fr; gap:12px;}
+  @media (min-width:760px){
+    .report-grid{grid-template-columns:1fr 1fr;}
+  }
+  .report-card{
+    background:var(--card); border:1px solid var(--line);
+    border-left:6px solid var(--muted);
+    border-radius:var(--radius);
+    padding:14px 14px 12px; cursor:pointer;
+    transition:box-shadow 0.15s ease, transform 0.1s ease;
+  }
+  .report-card:hover{box-shadow:0 3px 10px rgba(20,33,61,0.1); transform:translateY(-1px);}
+  .report-card.closed{opacity:0.62;}
+  .card-top{
+    display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:6px;
+  }
+  .card-id{font-size:0.72rem; color:var(--muted); letter-spacing:0.4px;}
+  .risk-chip{
+    display:inline-block; font-family:var(--font-display); font-weight:700;
+    font-size:0.72rem; letter-spacing:0.6px; text-transform:uppercase;
+    padding:3px 9px; border-radius:999px; color:#fff; flex-shrink:0;
+  }
+  .card-title{
+    font-family:var(--font-display); font-weight:600; font-size:1.25rem;
+    line-height:1.15; margin:0 0 4px;
+  }
+  .card-desc{
+    font-size:0.88rem; color:var(--muted); margin:0 0 10px;
+    display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
+  }
+  .card-meta{
+    display:flex; flex-wrap:wrap; gap:10px; font-size:0.78rem; color:var(--muted);
+    border-top:1px dashed var(--line); padding-top:8px;
+  }
+  .status-pill{
+    font-size:0.72rem; padding:2px 8px; border-radius:999px; border:1px solid var(--line);
+  }
+
+  .empty-state{
+    text-align:center; padding:60px 20px; color:var(--muted);
+  }
+  .empty-state svg{width:44px; height:44px; margin-bottom:12px; color:var(--line);}
+  .empty-state h2{font-family:var(--font-display); font-size:1.4rem; color:var(--text); margin:0 0 6px;}
+
+  /* ---------- Form ---------- */
+  .form-header{display:flex; align-items:center; gap:10px; margin-bottom:18px;}
+  .back-btn{
+    background:none; border:1px solid var(--line); border-radius:var(--radius);
+    width:36px; height:36px; display:flex; align-items:center; justify-content:center;
+    cursor:pointer; flex-shrink:0;
+  }
+  .back-btn svg{width:18px; height:18px;}
+  .form-header h2{font-family:var(--font-display); font-weight:700; font-size:1.6rem; margin:0;}
+
+  .section{
+    background:var(--card); border:1px solid var(--line); border-radius:var(--radius);
+    padding:16px; margin-bottom:14px;
+  }
+  .section h3{
+    font-family:var(--font-display); font-weight:600; font-size:1.15rem;
+    margin:0 0 12px; color:var(--ink);
+    border-bottom:1px solid var(--line); padding-bottom:8px;
+  }
+  .field{margin-bottom:12px;}
+  .field:last-child{margin-bottom:0;}
+  .field label{
+    display:block; font-size:0.82rem; color:var(--muted); margin-bottom:5px;
+  }
+  .field input[type=text], .field input[type=date], .field input[type=time],
+  .field select, .field textarea{
+    width:100%; padding:9px 10px; border:1px solid var(--line); border-radius:var(--radius);
+    background:#fff; font-size:0.95rem; color:var(--text); font-family:inherit;
+  }
+  .field textarea{resize:vertical; min-height:70px;}
+  .field.invalid input, .field.invalid textarea, .field.invalid select{border-color:var(--risk-critico);}
+  .field .err-msg{display:none; color:var(--risk-critico); font-size:0.78rem; margin-top:4px;}
+  .field.invalid .err-msg{display:block;}
+  .row-2{display:grid; grid-template-columns:1fr 1fr; gap:12px;}
+  .row-3{display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px;}
+  @media (max-width:520px){
+    .row-3{grid-template-columns:1fr 1fr;}
+  }
+
+  .risk-preview{
+    display:flex; align-items:center; gap:12px; margin-top:6px;
+    padding:12px; border-radius:var(--radius); background:var(--paper);
+    border:1px dashed var(--line);
+  }
+  .risk-preview .label{font-size:0.82rem; color:var(--muted);}
+  .risk-preview .value{
+    font-family:var(--font-display); font-weight:800; font-size:1.3rem;
+    letter-spacing:0.5px; transition:color 0.2s ease;
+  }
+
+  .photo-area{display:flex; align-items:center; gap:12px; flex-wrap:wrap;}
+  .photo-btn{
+    border:1px dashed var(--line); background:var(--paper); border-radius:var(--radius);
+    padding:9px 14px; cursor:pointer; font-size:0.88rem; color:var(--ink);
+  }
+  .photo-preview{position:relative; width:84px; height:84px;}
+  .photo-preview img{width:100%; height:100%; object-fit:cover; border-radius:var(--radius); border:1px solid var(--line);}
+  .photo-remove{
+    position:absolute; top:-8px; right:-8px; width:22px; height:22px; border-radius:50%;
+    background:var(--risk-critico); color:#fff; border:2px solid #fff; cursor:pointer;
+    font-size:0.8rem; line-height:1; display:flex; align-items:center; justify-content:center;
+  }
+  .hint{font-size:0.76rem; color:var(--muted); margin-top:4px;}
+
+  .form-actions{
+    position:sticky; bottom:0; background:var(--paper);
+    padding:14px 0 6px; display:flex; gap:10px; border-top:1px solid var(--line); margin-top:4px;
+  }
+  .btn-primary, .btn-secondary, .btn-danger{
+    font-family:var(--font-display); font-weight:700; font-size:1.05rem;
+    border-radius:var(--radius); padding:11px 18px; cursor:pointer; border:none;
+    flex:1;
+  }
+  .btn-primary{background:var(--ink); color:#fff;}
+  .btn-primary:hover{background:var(--ink-2);}
+  .btn-secondary{background:var(--card); color:var(--text); border:1px solid var(--line); flex:0 0 auto;}
+  .btn-danger{background:#fff; color:var(--risk-critico); border:1px solid var(--risk-critico); flex:0 0 auto;}
+
+  /* ---------- Detail view ---------- */
+  .detail-card{
+    background:var(--card); border:1px solid var(--line); border-radius:var(--radius);
+    padding:20px;
+  }
+  .detail-topline{
+    display:flex; justify-content:space-between; align-items:flex-start; gap:10px; margin-bottom:6px;
+  }
+  .detail-topline .card-id{font-size:0.8rem;}
+  .detail-title{font-family:var(--font-display); font-weight:700; font-size:1.7rem; margin:2px 0 14px;}
+  .detail-grid{display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:16px;}
+  @media (max-width:560px){.detail-grid{grid-template-columns:1fr;}}
+  .detail-item .label{font-size:0.76rem; color:var(--muted); margin-bottom:2px; text-transform:uppercase; letter-spacing:0.4px;}
+  .detail-item .value{font-size:0.95rem;}
+  .detail-block{margin-bottom:16px;}
+  .detail-block h4{font-family:var(--font-display); font-size:1.05rem; margin:0 0 6px; color:var(--ink);}
+  .detail-block p{margin:0; font-size:0.94rem; line-height:1.5; white-space:pre-wrap;}
+  .detail-photo{max-width:260px; border-radius:var(--radius); border:1px solid var(--line); display:block; margin-top:6px;}
+  .detail-actions{display:flex; gap:10px; flex-wrap:wrap; margin-top:20px; border-top:1px solid var(--line); padding-top:16px;}
+  .status-select{
+    padding:9px 12px; border:1px solid var(--line); border-radius:var(--radius); font-family:inherit; font-size:0.92rem;
+  }
+
+  .toast{
+    position:fixed; bottom:20px; left:50%; transform:translateX(-50%) translateY(20px);
+    background:var(--ink); color:#fff; padding:11px 20px; border-radius:var(--radius);
+    font-size:0.9rem; opacity:0; pointer-events:none; transition:opacity 0.2s ease, transform 0.2s ease;
+    z-index:50;
+  }
+  .toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
+
+  .modal-overlay{
+    position:fixed; inset:0; background:rgba(20,33,61,0.45); display:none;
+    align-items:center; justify-content:center; z-index:60; padding:20px;
+  }
+  .modal-overlay.show{display:flex;}
+  .modal-box{
+    background:#fff; border-radius:var(--radius); padding:20px; max-width:360px; width:100%;
+  }
+  .modal-box h3{font-family:var(--font-display); margin:0 0 8px; font-size:1.2rem;}
+  .modal-box p{font-size:0.9rem; color:var(--muted); margin:0 0 16px;}
+  .modal-actions{display:flex; gap:10px;}
+
+  .loading-banner{text-align:center; padding:40px; color:var(--muted); font-size:0.9rem;}
+  .error-banner{
+    background:#FBE9E7; border:1px solid var(--risk-critico); color:var(--risk-critico);
+    padding:10px 14px; border-radius:var(--radius); font-size:0.85rem; margin-bottom:14px;
+  }
+  .privacy-note{font-size:0.76rem; color:var(--muted); margin:0 0 16px; text-align:center;}
+  .history-banner{
+    display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;
+    background:var(--ink); color:#fff; border-radius:var(--radius);
+    padding:10px 14px; margin-bottom:14px; font-size:0.85rem;
+  }
+  .btn-ghost-light{
+    background:var(--yellow); color:var(--yellow-ink); border:none; border-radius:var(--radius);
+    padding:7px 12px; font-size:0.8rem; font-weight:700; cursor:pointer; white-space:nowrap;
+    font-family:var(--font-display);
+  }
+  .btn-ghost-light:hover{background:#FFD35C;}
+
+  @media print{
+    header, .toolbar, .status-tabs, .detail-actions, .privacy-note, .history-banner{display:none !important;}
+    body{background:#fff;}
+    .detail-card{border:none; padding:0;}
+    main{padding:0; max-width:100%;}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="brand">
+      <div class="brand-mark"></div>
+      <div class="brand-text">
+        <h1>Bitácora de Seguridad</h1>
+        <p>Hallazgos y condiciones inseguras</p>
+      </div>
+    </div>
+    <div class="header-actions" id="headerActions" style="display:none;">
+      <div class="user-badge" id="userBadge"></div>
+      <button class="btn-ghost" id="btnAdminPanel" style="display:none;">Gestionar usuarios</button>
+      <button class="btn-new" id="btnNew">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+        <span>Nuevo hallazgo</span>
+      </button>
+      <button class="btn-ghost" id="btnLogout">Cerrar sesión</button>
+    </div>
+  </div>
+</header>
+
+<main>
+
+  <!-- LOGIN -->
+  <section class="view active" id="view-login">
+    <div class="login-wrap">
+      <div class="login-card">
+        <div id="setupBlock" style="display:none;">
+          <h2>Configurar acceso</h2>
+          <p class="sub">Primera vez que se abre esta bitácora. Define la contraseña de administrador.</p>
+          <div class="setup-note">Esta cuenta te permitirá crear usuarios (supervisores) más adelante desde "Gestionar usuarios".</div>
+          <div class="field">
+            <label for="setupPassword">Nueva contraseña de administrador</label>
+            <div class="pw-field">
+              <input type="password" id="setupPassword">
+              <button type="button" class="pw-toggle" data-target="setupPassword">Ver</button>
+            </div>
+          </div>
+          <div class="field">
+            <label for="setupPasswordConfirm">Confirmar contraseña</label>
+            <input type="password" id="setupPasswordConfirm">
+          </div>
+          <div class="login-error" id="setupError"></div>
+          <button class="btn-primary" style="width:100%;" id="btnSetupSave">Guardar y continuar</button>
+        </div>
+
+        <div id="loginBlock">
+          <h2>Iniciar sesión</h2>
+          <p class="sub">Ingresa para registrar o consultar hallazgos.</p>
+          <div class="login-tabs">
+            <button data-role="supervisor" class="active" id="tabSupervisor">Supervisor</button>
+            <button data-role="admin" id="tabAdmin">Administrador</button>
+          </div>
+          <div class="login-error" id="loginError"></div>
+
+          <div id="supervisorLoginFields">
+            <div class="field">
+              <label for="loginEmail">Correo</label>
+              <input type="text" id="loginEmail" placeholder="tucorreo@empresa.com">
+            </div>
+            <div class="field">
+              <label for="loginPassword">Contraseña</label>
+              <div class="pw-field">
+                <input type="password" id="loginPassword">
+                <button type="button" class="pw-toggle" data-target="loginPassword">Ver</button>
+              </div>
+            </div>
+          </div>
+
+          <div id="adminLoginFields" style="display:none;">
+            <div class="field">
+              <label for="adminPasswordInput">Contraseña de administrador</label>
+              <div class="pw-field">
+                <input type="password" id="adminPasswordInput">
+                <button type="button" class="pw-toggle" data-target="adminPasswordInput">Ver</button>
+              </div>
+            </div>
+          </div>
+
+          <button class="btn-primary" style="width:100%;" id="btnLogin">Ingresar</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ADMIN: USER MANAGEMENT -->
+  <section class="view" id="view-admin">
+    <div class="form-header">
+      <button class="back-btn" id="btnBackFromAdmin" aria-label="Volver">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="M15 18l-6-6 6-6"/></svg>
+      </button>
+      <h2>Gestionar usuarios</h2>
+    </div>
+    <div class="section">
+      <h3>Cambiar contraseña de administrador</h3>
+      <div class="row-2">
+        <div class="field">
+          <label for="adminNewPassword">Nueva contraseña</label>
+          <input type="password" id="adminNewPassword">
+        </div>
+        <div class="field" style="display:flex; align-items:flex-end;">
+          <button class="btn-secondary" id="btnChangeAdminPassword" style="width:100%;">Actualizar</button>
+        </div>
+      </div>
+    </div>
+    <div class="section">
+      <h3>Supervisores</h3>
+      <div id="usersList"></div>
+      <button class="btn-secondary" id="btnAddUser" style="margin-top:6px;">+ Agregar supervisor</button>
+    </div>
+    <div class="section">
+      <h3>Exportar datos</h3>
+      <p class="hint" style="margin-bottom:10px;">Descarga todo el historial de reportes en un archivo CSV (sin fotos, para mantenerlo liviano) — útil para análisis, respaldos, o para compartirlo con Claude.</p>
+      <button class="btn-secondary" id="btnExportCsv">Exportar historial completo (CSV)</button>
+    </div>
+  </section>
+
+  <!-- USER FORM (add/edit) -->
+  <section class="view" id="view-user-form">
+    <div class="form-header">
+      <button class="back-btn" id="btnBackFromUserForm" aria-label="Volver">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="M15 18l-6-6 6-6"/></svg>
+      </button>
+      <h2 id="userFormTitle">Agregar supervisor</h2>
+    </div>
+    <div class="section">
+      <div class="field" id="f-userNombre">
+        <label for="userNombre">Nombre completo</label>
+        <input type="text" id="userNombre" placeholder="Ej. Ana Ramírez">
+        <div class="err-msg">Ingresa el nombre.</div>
+      </div>
+      <div class="field" id="f-userEmail">
+        <label for="userEmail">Correo</label>
+        <input type="text" id="userEmail" placeholder="ana.ramirez@empresa.com">
+        <div class="err-msg">Ingresa un correo válido.</div>
+      </div>
+      <div class="field" id="f-userPassword">
+        <label for="userPassword" id="userPasswordLabel">Contraseña asignada</label>
+        <div class="pw-field">
+          <input type="password" id="userPassword">
+          <button type="button" class="pw-toggle" data-target="userPassword">Ver</button>
+        </div>
+        <div class="err-msg">Asigna una contraseña.</div>
+        <p class="hint" id="userPasswordHint">Compártela con el supervisor por un medio seguro.</p>
+      </div>
+    </div>
+    <div class="form-actions">
+      <button class="btn-secondary" id="btnCancelUserForm">Cancelar</button>
+      <button class="btn-primary" id="btnSaveUserForm">Guardar supervisor</button>
+    </div>
+  </section>
+
+  <!-- DASHBOARD -->
+  <section class="view" id="view-dashboard">
+    <p class="privacy-note">Estos reportes son visibles para todo el equipo con acceso a esta bitácora.</p>
+    <div id="dashboardLoading" class="loading-banner">Cargando reportes…</div>
+    <div id="dashboardError" class="error-banner" style="display:none;"></div>
+    <div id="dashboardContent" style="display:none;">
+      <div class="history-banner" id="historyBanner">
+        <span id="historyBannerText">Mostrando los 2 reportes más recientes.</span>
+        <button class="btn-ghost-light" id="btnToggleHistory">Ver historial completo</button>
+      </div>
+      <div class="toolbar">
+        <div class="search-box">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+          <input type="text" id="searchInput" placeholder="Buscar por lugar o descripción…">
+        </div>
+        <select class="filter-select" id="riskFilter">
+          <option value="">Todos los riesgos</option>
+          <option value="Crítico">Crítico</option>
+          <option value="Alto">Alto</option>
+          <option value="Medio">Medio</option>
+          <option value="Bajo">Bajo</option>
+        </select>
+      </div>
+      <div class="status-tabs" id="statusTabs">
+        <button data-status="" class="active">Todos</button>
+        <button data-status="Abierto">Abiertos</button>
+        <button data-status="En progreso">En progreso</button>
+        <button data-status="Cerrado">Cerrados</button>
+      </div>
+      <div class="report-grid" id="reportGrid"></div>
+      <div class="empty-state" id="emptyState" style="display:none;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 9v4M12 17h.01M10.3 3.9L2.6 17.5a1.5 1.5 0 001.3 2.2h16.2a1.5 1.5 0 001.3-2.2L13.7 3.9a1.5 1.5 0 00-2.6 0z"/></svg>
+        <h2>Sin hallazgos todavía</h2>
+        <p>Registra tu primera condición insegura con "Nuevo hallazgo".</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- FORM -->
+  <section class="view" id="view-form">
+    <div class="form-header">
+      <button class="back-btn" id="btnBackFromForm" aria-label="Volver">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="M15 18l-6-6 6-6"/></svg>
+      </button>
+      <h2 id="formTitle">Nuevo hallazgo</h2>
+    </div>
+
+    <div class="section">
+      <h3>Datos generales</h3>
+      <div class="row-3">
+        <div class="field" id="f-fecha">
+          <label for="fecha">Fecha</label>
+          <input type="date" id="fecha">
+          <div class="err-msg">Ingresa la fecha.</div>
+        </div>
+        <div class="field" id="f-hora">
+          <label for="hora">Hora</label>
+          <input type="time" id="hora">
+        </div>
+        <div class="field" id="f-turno">
+          <label for="turno">Turno</label>
+          <select id="turno">
+            <option>Mañana</option>
+            <option>Tarde</option>
+            <option>Noche</option>
+          </select>
+        </div>
+      </div>
+      <div class="row-2">
+        <div class="field" id="f-lugar">
+          <label for="lugar">Lugar / área</label>
+          <input type="text" id="lugar" placeholder="Ej. Almacén, línea 3">
+          <div class="err-msg">Indica el lugar.</div>
+        </div>
+        <div class="field" id="f-supervisor">
+          <label for="supervisor">Supervisor</label>
+          <input type="text" id="supervisor" readonly style="background:var(--paper); color:var(--muted); cursor:not-allowed;">
+          <p class="hint">Se asigna automáticamente según tu sesión.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h3>¿Qué encontraste?</h3>
+      <div class="field" id="f-descripcion">
+        <label for="descripcion">Describe la condición insegura con hechos concretos</label>
+        <textarea id="descripcion" placeholder="Qué viste, qué equipo o proceso está involucrado, en qué estado se encontraba…"></textarea>
+        <div class="err-msg">Describe el hallazgo.</div>
+      </div>
+      <div class="field" style="margin-top:10px;">
+        <label>Foto (opcional)</label>
+        <div class="photo-area">
+          <button type="button" class="photo-btn" id="btnAddPhoto">Agregar foto</button>
+          <input type="file" id="photoInput" accept="image/*" style="display:none;">
+          <div class="photo-preview" id="photoPreview" style="display:none;">
+            <img id="photoImg" src="" alt="Evidencia">
+            <button type="button" class="photo-remove" id="btnRemovePhoto">×</button>
+          </div>
+        </div>
+        <p class="hint">La imagen se comprime automáticamente para ahorrar espacio.</p>
+      </div>
+    </div>
+
+    <div class="section">
+      <h3>Evaluación de riesgo</h3>
+      <div class="row-2">
+        <div class="field">
+          <label for="probabilidad">Probabilidad</label>
+          <select id="probabilidad">
+            <option value="Baja">Baja</option>
+            <option value="Media">Media</option>
+            <option value="Alta">Alta</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="impacto">Impacto</label>
+          <select id="impacto">
+            <option value="Leve">Leve</option>
+            <option value="Moderado">Moderado</option>
+            <option value="Grave">Grave</option>
+            <option value="Catastrófico">Catastrófico</option>
+          </select>
+        </div>
+      </div>
+      <div class="risk-preview">
+        <span class="label">Nivel de riesgo resultante:</span>
+        <span class="value" id="riskPreviewValue">Bajo</span>
+      </div>
+    </div>
+
+    <div class="section">
+      <h3>¿Quién o qué está expuesto?</h3>
+      <div class="field">
+        <label for="expuestos">Personas, equipos o áreas en riesgo</label>
+        <input type="text" id="expuestos" placeholder="Ej. Operadores de línea 3, montacarguistas">
+      </div>
+    </div>
+
+    <div class="section">
+      <h3>Respuesta inmediata</h3>
+      <div class="field">
+        <label for="acciones">¿Qué se hizo en el momento para contener el riesgo?</label>
+        <textarea id="acciones" placeholder="Ej. Se acordonó el área y se notificó a mantenimiento"></textarea>
+      </div>
+    </div>
+
+    <div class="section">
+      <h3>Plan de acción</h3>
+      <div class="field">
+        <label for="recomendaciones">Recomendaciones correctivas</label>
+        <textarea id="recomendaciones" placeholder="Qué debe cambiar para eliminar la causa raíz"></textarea>
+      </div>
+    </div>
+
+    <div class="section">
+      <h3>Seguimiento</h3>
+      <div class="row-3">
+        <div class="field">
+          <label for="responsable">Responsable del cierre</label>
+          <input type="text" id="responsable" placeholder="Nombre">
+        </div>
+        <div class="field">
+          <label for="plazo">Fecha límite</label>
+          <input type="date" id="plazo">
+        </div>
+        <div class="field">
+          <label for="estado">Estado</label>
+          <select id="estado">
+            <option>Abierto</option>
+            <option>En progreso</option>
+            <option>Cerrado</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-actions">
+      <button class="btn-secondary" id="btnCancelForm">Cancelar</button>
+      <button class="btn-primary" id="btnSaveForm">Guardar reporte</button>
+    </div>
+  </section>
+
+  <!-- DETAIL -->
+  <section class="view" id="view-detail">
+    <div class="form-header">
+      <button class="back-btn" id="btnBackFromDetail" aria-label="Volver">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="M15 18l-6-6 6-6"/></svg>
+      </button>
+      <h2>Detalle del hallazgo</h2>
+    </div>
+    <div class="detail-card" id="detailContent"></div>
+  </section>
+
+</main>
+
+<div class="toast" id="toast"></div>
+
+<div class="modal-overlay" id="deleteModal">
+  <div class="modal-box">
+    <h3>¿Eliminar este reporte?</h3>
+    <p>Esta acción no se puede deshacer.</p>
+    <div class="modal-actions">
+      <button class="btn-secondary" id="btnCancelDelete">Cancelar</button>
+      <button class="btn-danger" id="btnConfirmDelete" style="background:var(--risk-critico); color:#fff;">Eliminar</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
+  import {
+    getFirestore, doc, getDoc, setDoc, deleteDoc, collection, getDocs, query, orderBy, limit
+  } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+  window.fbApp = { initializeApp: initializeApp, getFirestore: getFirestore };
+  window.fb = {
+    doc: doc, getDoc: getDoc, setDoc: setDoc, deleteDoc: deleteDoc, collection: collection, getDocs: getDocs,
+    query: query, orderBy: orderBy, limit: limit
+  };
+</script>
+<script type="module">
+(function(){
+  "use strict";
+
+  var db = null; // set during init() from the Firebase app initialized via firebase-config.js
+
+  var RECENT_LIMIT = 2;
+  var state = { reports: [] };
+  var historicalLoaded = false;   // false = showing only the N most recent reports
+  var allReportsCache = null;     // full collection, cached in memory once fetched this session
+  var adminConfig = { passwordHash: null };
+  var usersConfig = { users: [] };
+  var session = null; // { type:'admin' } or { type:'supervisor', email, nombre }
+  var currentEditId = null;
+  var currentEditUserEmail = null;
+  var currentPhotoDataUrl = null;
+  var pendingDeleteId = null;
+  var pendingDeleteUserEmail = null;
+  var currentStatusFilter = "";
+
+  // ---------- Crypto ----------
+  async function hashText(text){
+    var enc = new TextEncoder().encode(text);
+    var buf = await crypto.subtle.digest("SHA-256", enc);
+    return Array.from(new Uint8Array(buf)).map(function(b){ return b.toString(16).padStart(2,"0"); }).join("");
+  }
+
+  // ---------- Storage: reports (Firestore collection "reportes", one document per report) ----------
+  // Por defecto solo se cargan los últimos RECENT_LIMIT reportes (una consulta acotada,
+  // gasta muy pocas lecturas). El historial completo solo se trae si alguien lo pide
+  // explícitamente, y luego queda en memoria para no volver a pagar esa lectura en la
+  // misma sesión.
+  async function loadRecentReports(){
+    try{
+      var q = window.fb.query(
+        window.fb.collection(db, "reportes"),
+        window.fb.orderBy("createdAt", "desc"),
+        window.fb.limit(RECENT_LIMIT)
+      );
+      var snap = await window.fb.getDocs(q);
+      var list = [];
+      snap.forEach(function(docSnap){ list.push(docSnap.data()); });
+      state.reports = list;
+      historicalLoaded = false;
+    }catch(e){
+      console.error(e);
+      state.reports = [];
+      showToast("No se pudieron cargar los reportes. Revisa tu conexión.");
+    }
+  }
+
+  async function loadFullHistory(){
+    if(allReportsCache){
+      state.reports = allReportsCache;
+      historicalLoaded = true;
+      return;
+    }
+    try{
+      var snap = await window.fb.getDocs(window.fb.collection(db, "reportes"));
+      var list = [];
+      snap.forEach(function(docSnap){ list.push(docSnap.data()); });
+      allReportsCache = list;
+      state.reports = list;
+      historicalLoaded = true;
+    }catch(e){
+      console.error(e);
+      showToast("No se pudo cargar el historial completo. Revisa tu conexión.");
+    }
+  }
+
+  function showOnlyRecentLocally(){
+    var source = allReportsCache || state.reports;
+    var sorted = source.slice().sort(function(a,b){
+      return (b.createdAt||"").localeCompare(a.createdAt||"");
+    });
+    state.reports = sorted.slice(0, RECENT_LIMIT);
+    historicalLoaded = false;
+  }
+
+  // Mantiene la lista visible y (si existe) la caché completa sincronizadas tras
+  // crear o editar un reporte, sin necesidad de volver a leer de Firestore.
+  function upsertLocalReport(report){
+    var applyTo = function(arr){
+      var i = arr.findIndex(function(r){ return r.id === report.id; });
+      if(i > -1) arr[i] = report; else arr.push(report);
+    };
+    applyTo(state.reports);
+    if(allReportsCache) applyTo(allReportsCache);
+    if(!historicalLoaded){
+      state.reports.sort(function(a,b){ return (b.createdAt||"").localeCompare(a.createdAt||""); });
+      state.reports = state.reports.slice(0, RECENT_LIMIT);
+    }
+  }
+
+  function removeLocalReport(id){
+    state.reports = state.reports.filter(function(r){ return r.id !== id; });
+    if(allReportsCache) allReportsCache = allReportsCache.filter(function(r){ return r.id !== id; });
+    if(!historicalLoaded && allReportsCache){
+      showOnlyRecentLocally();
+    }
+  }
+
+  async function saveReportDoc(report){
+    try{
+      await window.fb.setDoc(window.fb.doc(db, "reportes", report.id), report);
+      return true;
+    }catch(e){
+      console.error(e);
+      showToast("No se pudo guardar. Intenta de nuevo.");
+      return false;
+    }
+  }
+
+  async function deleteReportDoc(id){
+    try{
+      await window.fb.deleteDoc(window.fb.doc(db, "reportes", id));
+      return true;
+    }catch(e){
+      console.error(e);
+      showToast("No se pudo eliminar. Intenta de nuevo.");
+      return false;
+    }
+  }
+
+  // ---------- Storage: admin config (Firestore doc "config/admin") ----------
+  async function loadAdminConfig(){
+    try{
+      var snap = await window.fb.getDoc(window.fb.doc(db, "config", "admin"));
+      if(snap.exists()) adminConfig = snap.data();
+    }catch(e){ console.error(e); adminConfig = { passwordHash: null }; }
+  }
+  async function persistAdminConfig(){
+    try{
+      await window.fb.setDoc(window.fb.doc(db, "config", "admin"), adminConfig);
+      return true;
+    }catch(e){ console.error(e); return false; }
+  }
+
+  // ---------- Storage: users (Firestore collection "usuarios", doc id = email) ----------
+  async function loadUsersConfig(){
+    try{
+      var snap = await window.fb.getDocs(window.fb.collection(db, "usuarios"));
+      var list = [];
+      snap.forEach(function(docSnap){ list.push(docSnap.data()); });
+      usersConfig.users = list;
+    }catch(e){ console.error(e); usersConfig = { users: [] }; }
+  }
+  async function saveUserDoc(user){
+    try{
+      await window.fb.setDoc(window.fb.doc(db, "usuarios", user.email), user);
+      return true;
+    }catch(e){ console.error(e); return false; }
+  }
+  async function deleteUserDoc(email){
+    try{
+      await window.fb.deleteDoc(window.fb.doc(db, "usuarios", email));
+      return true;
+    }catch(e){ console.error(e); return false; }
+  }
+
+  // ---------- Helpers ----------
+  function pad(n){ return n < 10 ? "0"+n : ""+n; }
+
+  function todayISO(){
+    var d = new Date();
+    return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());
+  }
+  function nowHM(){
+    var d = new Date();
+    return pad(d.getHours())+":"+pad(d.getMinutes());
+  }
+  function formatDateDisplay(iso){
+    if(!iso) return "—";
+    var parts = iso.split("-");
+    if(parts.length!==3) return iso;
+    var meses = ["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"];
+    return parseInt(parts[2],10)+" "+meses[parseInt(parts[1],10)-1]+" "+parts[0];
+  }
+
+  var PROB_WEIGHT = { "Baja":1, "Media":2, "Alta":3 };
+  var IMP_WEIGHT = { "Leve":1, "Moderado":2, "Grave":3, "Catastrófico":4 };
+
+  function computeRisk(prob, imp){
+    var score = (PROB_WEIGHT[prob]||1) * (IMP_WEIGHT[imp]||1);
+    if(score <= 2) return "Bajo";
+    if(score <= 5) return "Medio";
+    if(score <= 8) return "Alto";
+    return "Crítico";
+  }
+
+  var RISK_COLOR = {
+    "Bajo": "var(--risk-bajo)",
+    "Medio": "var(--risk-medio)",
+    "Alto": "var(--risk-alto)",
+    "Crítico": "var(--risk-critico)"
+  };
+  var RISK_WEIGHT = { "Bajo":0, "Medio":1, "Alto":2, "Crítico":3 };
+  var STATUS_WEIGHT = { "Abierto":0, "En progreso":1, "Cerrado":2 };
+
+  function genId(){
+    var d = new Date();
+    var datePart = d.getFullYear() + pad(d.getMonth()+1) + pad(d.getDate());
+    var rand = Math.random().toString(36).slice(2, 6).toUpperCase();
+    return "RS-" + datePart + "-" + rand;
+  }
+
+  function showToast(msg){
+    var t = document.getElementById("toast");
+    t.textContent = msg;
+    t.classList.add("show");
+    setTimeout(function(){ t.classList.remove("show"); }, 2400);
+  }
+
+  function showView(id){
+    document.querySelectorAll(".view").forEach(function(v){ v.classList.remove("active"); });
+    document.getElementById(id).classList.add("active");
+    window.scrollTo({top:0, behavior:"instant"});
+  }
+
+  // ---------- Dashboard rendering ----------
+  function getFilteredSortedReports(){
+    var search = document.getElementById("searchInput").value.trim().toLowerCase();
+    var riskFilter = document.getElementById("riskFilter").value;
+    var list = state.reports.filter(function(r){
+      if(currentStatusFilter && r.estado !== currentStatusFilter) return false;
+      if(riskFilter && r.riesgoNivel !== riskFilter) return false;
+      if(search){
+        var hay = (r.lugar+" "+r.descripcion+" "+r.id).toLowerCase();
+        if(hay.indexOf(search) === -1) return false;
+      }
+      return true;
+    });
+    list.sort(function(a,b){
+      var sw = STATUS_WEIGHT[a.estado] - STATUS_WEIGHT[b.estado];
+      if(sw !== 0) return sw;
+      var rw = RISK_WEIGHT[b.riesgoNivel] - RISK_WEIGHT[a.riesgoNivel];
+      if(rw !== 0) return rw;
+      return (b.fecha||"").localeCompare(a.fecha||"");
+    });
+    return list;
+  }
+
+  function updateHistoryBanner(){
+    var textEl = document.getElementById("historyBannerText");
+    var btn = document.getElementById("btnToggleHistory");
+    if(historicalLoaded){
+      textEl.textContent = "Mostrando el historial completo (" + state.reports.length + " reporte(s)).";
+      btn.textContent = "Ver solo recientes";
+    } else {
+      textEl.textContent = "Mostrando los " + RECENT_LIMIT + " reportes más recientes.";
+      btn.textContent = "Ver historial completo";
+    }
+  }
+
+  function renderDashboard(){
+    updateHistoryBanner();
+    var list = getFilteredSortedReports();
+    var grid = document.getElementById("reportGrid");
+    var empty = document.getElementById("emptyState");
+    grid.innerHTML = "";
+    if(list.length === 0){
+      empty.style.display = "block";
+      grid.style.display = "none";
+      return;
+    }
+    empty.style.display = "none";
+    grid.style.display = "grid";
+
+    list.forEach(function(r){
+      var card = document.createElement("div");
+      card.className = "report-card" + (r.estado === "Cerrado" ? " closed" : "");
+      card.style.borderLeftColor = RISK_COLOR[r.riesgoNivel];
+      card.innerHTML =
+        '<div class="card-top">' +
+          '<span class="card-id">'+r.id+'</span>' +
+          '<span class="risk-chip" style="background:'+RISK_COLOR[r.riesgoNivel]+'">'+r.riesgoNivel+'</span>' +
+        '</div>' +
+        '<h3 class="card-title">'+escapeHtml(r.lugar || "Sin lugar")+'</h3>' +
+        '<p class="card-desc">'+escapeHtml(r.descripcion || "")+'</p>' +
+        '<div class="card-meta">' +
+          '<span>'+formatDateDisplay(r.fecha)+'</span>' +
+          '<span>'+escapeHtml(r.turno||"")+'</span>' +
+          '<span class="status-pill">'+r.estado+'</span>' +
+        '</div>';
+      card.addEventListener("click", function(){ openDetail(r.id); });
+      grid.appendChild(card);
+    });
+  }
+
+  function escapeHtml(str){
+    var div = document.createElement("div");
+    div.textContent = str == null ? "" : str;
+    return div.innerHTML;
+  }
+
+  // ---------- Form ----------
+  function resetForm(){
+    currentEditId = null;
+    currentPhotoDataUrl = null;
+    document.getElementById("formTitle").textContent = "Nuevo hallazgo";
+    document.getElementById("fecha").value = todayISO();
+    document.getElementById("hora").value = nowHM();
+    document.getElementById("turno").value = "Mañana";
+    document.getElementById("lugar").value = "";
+    document.getElementById("supervisor").value = getSessionDisplayName();
+    document.getElementById("descripcion").value = "";
+    document.getElementById("probabilidad").value = "Baja";
+    document.getElementById("impacto").value = "Leve";
+    document.getElementById("expuestos").value = "";
+    document.getElementById("acciones").value = "";
+    document.getElementById("recomendaciones").value = "";
+    document.getElementById("responsable").value = "";
+    document.getElementById("plazo").value = "";
+    document.getElementById("estado").value = "Abierto";
+    setPhotoPreview(null);
+    updateRiskPreview();
+    clearValidation();
+  }
+
+  function getSessionDisplayName(){
+    if(!session) return "";
+    return session.type === "admin" ? "Administrador" : session.nombre;
+  }
+
+  function fillFormFromReport(r){
+    currentEditId = r.id;
+    document.getElementById("formTitle").textContent = "Editar hallazgo";
+    document.getElementById("fecha").value = r.fecha || todayISO();
+    document.getElementById("hora").value = r.hora || nowHM();
+    document.getElementById("turno").value = r.turno || "Mañana";
+    document.getElementById("lugar").value = r.lugar || "";
+    document.getElementById("supervisor").value = r.supervisor || "";
+    document.getElementById("descripcion").value = r.descripcion || "";
+    document.getElementById("probabilidad").value = r.probabilidad || "Baja";
+    document.getElementById("impacto").value = r.impacto || "Leve";
+    document.getElementById("expuestos").value = r.expuestos || "";
+    document.getElementById("acciones").value = r.accionesInmediatas || "";
+    document.getElementById("recomendaciones").value = r.recomendaciones || "";
+    document.getElementById("responsable").value = r.responsable || "";
+    document.getElementById("plazo").value = r.plazo || "";
+    document.getElementById("estado").value = r.estado || "Abierto";
+    currentPhotoDataUrl = r.fotoDataUrl || null;
+    setPhotoPreview(currentPhotoDataUrl);
+    updateRiskPreview();
+    clearValidation();
+  }
+
+  function updateRiskPreview(){
+    var prob = document.getElementById("probabilidad").value;
+    var imp = document.getElementById("impacto").value;
+    var level = computeRisk(prob, imp);
+    var el = document.getElementById("riskPreviewValue");
+    el.textContent = level;
+    el.style.color = getComputedColor(level);
+  }
+  function getComputedColor(level){
+    var map = {"Bajo":"#3E8E41","Medio":"#D98A00","Alto":"#D2481F","Crítico":"#A0201A"};
+    return map[level];
+  }
+
+  function clearValidation(){
+    ["f-fecha","f-lugar","f-descripcion"].forEach(function(id){
+      document.getElementById(id).classList.remove("invalid");
+    });
+  }
+
+  function validateForm(){
+    clearValidation();
+    var ok = true;
+    if(!document.getElementById("fecha").value){ document.getElementById("f-fecha").classList.add("invalid"); ok = false; }
+    if(!document.getElementById("lugar").value.trim()){ document.getElementById("f-lugar").classList.add("invalid"); ok = false; }
+    if(!document.getElementById("descripcion").value.trim()){ document.getElementById("f-descripcion").classList.add("invalid"); ok = false; }
+    return ok;
+  }
+
+  async function saveForm(){
+    if(!validateForm()){
+      showToast("Completa los campos marcados en rojo.");
+      return;
+    }
+    var prob = document.getElementById("probabilidad").value;
+    var imp = document.getElementById("impacto").value;
+    var now = new Date().toISOString();
+    var reportToSave;
+
+    if(currentEditId){
+      var idx = state.reports.findIndex(function(r){ return r.id === currentEditId; });
+      reportToSave = Object.assign({}, idx > -1 ? state.reports[idx] : { id: currentEditId }, {
+        fecha: document.getElementById("fecha").value,
+        hora: document.getElementById("hora").value,
+        turno: document.getElementById("turno").value,
+        lugar: document.getElementById("lugar").value.trim(),
+        supervisor: document.getElementById("supervisor").value.trim(),
+        descripcion: document.getElementById("descripcion").value.trim(),
+        fotoDataUrl: currentPhotoDataUrl,
+        probabilidad: prob,
+        impacto: imp,
+        riesgoNivel: computeRisk(prob, imp),
+        expuestos: document.getElementById("expuestos").value.trim(),
+        accionesInmediatas: document.getElementById("acciones").value.trim(),
+        recomendaciones: document.getElementById("recomendaciones").value.trim(),
+        responsable: document.getElementById("responsable").value.trim(),
+        plazo: document.getElementById("plazo").value,
+        estado: document.getElementById("estado").value,
+        updatedAt: now
+      });
+    } else {
+      reportToSave = {
+        id: genId(),
+        createdAt: now,
+        updatedAt: now,
+        fecha: document.getElementById("fecha").value,
+        hora: document.getElementById("hora").value,
+        turno: document.getElementById("turno").value,
+        lugar: document.getElementById("lugar").value.trim(),
+        supervisor: document.getElementById("supervisor").value.trim(),
+        descripcion: document.getElementById("descripcion").value.trim(),
+        fotoDataUrl: currentPhotoDataUrl,
+        probabilidad: prob,
+        impacto: imp,
+        riesgoNivel: computeRisk(prob, imp),
+        expuestos: document.getElementById("expuestos").value.trim(),
+        accionesInmediatas: document.getElementById("acciones").value.trim(),
+        recomendaciones: document.getElementById("recomendaciones").value.trim(),
+        responsable: document.getElementById("responsable").value.trim(),
+        plazo: document.getElementById("plazo").value,
+        estado: document.getElementById("estado").value
+      };
+    }
+
+    var success = await saveReportDoc(reportToSave);
+    if(success){
+      upsertLocalReport(reportToSave);
+      showToast("Reporte guardado.");
+      renderDashboard();
+      showView("view-dashboard");
+    }
+  }
+
+  // ---------- Photo handling ----------
+  function setPhotoPreview(dataUrl){
+    var wrap = document.getElementById("photoPreview");
+    var img = document.getElementById("photoImg");
+    var btn = document.getElementById("btnAddPhoto");
+    if(dataUrl){
+      img.src = dataUrl;
+      wrap.style.display = "block";
+      btn.style.display = "none";
+    } else {
+      img.src = "";
+      wrap.style.display = "none";
+      btn.style.display = "inline-block";
+    }
+  }
+
+  function compressImage(file, callback){
+    var reader = new FileReader();
+    reader.onload = function(e){
+      var img = new Image();
+      img.onload = function(){
+        var maxW = 360;
+        var scale = Math.min(1, maxW / img.width);
+        var canvas = document.createElement("canvas");
+        canvas.width = img.width * scale;
+        canvas.height = img.height * scale;
+        var ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        callback(canvas.toDataURL("image/jpeg", 0.5));
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  // ---------- Detail ----------
+  function openDetail(id){
+    var r = state.reports.find(function(x){ return x.id === id; });
+    if(!r) return;
+    var content = document.getElementById("detailContent");
+    content.dataset.currentId = id;
+    content.innerHTML =
+      '<div class="detail-topline">' +
+        '<span class="card-id">'+r.id+'</span>' +
+        '<span class="risk-chip" style="background:'+RISK_COLOR[r.riesgoNivel]+'">'+r.riesgoNivel+'</span>' +
+      '</div>' +
+      '<h2 class="detail-title">'+escapeHtml(r.lugar)+'</h2>' +
+      '<div class="detail-grid">' +
+        detailItem("Fecha", formatDateDisplay(r.fecha)) +
+        detailItem("Hora", r.hora || "—") +
+        detailItem("Turno", r.turno || "—") +
+        detailItem("Supervisor", r.supervisor || "—") +
+      '</div>' +
+      detailBlock("Descripción del hallazgo", r.descripcion) +
+      (r.fotoDataUrl ? '<div class="detail-block"><h4>Evidencia</h4><img class="detail-photo" src="'+r.fotoDataUrl+'" alt="Evidencia del hallazgo"></div>' : '') +
+      detailBlock("Personas o áreas expuestas", r.expuestos) +
+      detailBlock("Acciones inmediatas tomadas", r.accionesInmediatas) +
+      detailBlock("Recomendaciones correctivas", r.recomendaciones) +
+      '<div class="detail-grid">' +
+        detailItem("Responsable de cierre", r.responsable || "—") +
+        detailItem("Fecha límite", r.plazo ? formatDateDisplay(r.plazo) : "—") +
+      '</div>' +
+      '<div class="detail-actions">' +
+        '<select class="status-select" id="quickStatus">' +
+          ['Abierto','En progreso','Cerrado'].map(function(s){
+            return '<option value="'+s+'"'+(s===r.estado?' selected':'')+'>'+s+'</option>';
+          }).join('') +
+        '</select>' +
+        '<button class="btn-secondary" id="btnEditDetail">Editar</button>' +
+        '<button class="btn-secondary" id="btnPrintDetail">Imprimir / exportar</button>' +
+        '<button class="btn-danger" id="btnDeleteDetail">Eliminar</button>' +
+      '</div>';
+
+    document.getElementById("quickStatus").addEventListener("change", async function(e){
+      r.estado = e.target.value;
+      r.updatedAt = new Date().toISOString();
+      await saveReportDoc(r);
+      renderDashboard();
+      showToast("Estado actualizado.");
+    });
+    document.getElementById("btnEditDetail").addEventListener("click", function(){
+      fillFormFromReport(r);
+      showView("view-form");
+    });
+    document.getElementById("btnPrintDetail").addEventListener("click", function(){
+      window.print();
+    });
+    document.getElementById("btnDeleteDetail").addEventListener("click", function(){
+      pendingDeleteId = r.id;
+      document.getElementById("deleteModal").classList.add("show");
+    });
+
+    showView("view-detail");
+  }
+
+  function detailItem(label, value){
+    return '<div class="detail-item"><div class="label">'+label+'</div><div class="value">'+escapeHtml(value)+'</div></div>';
+  }
+  function detailBlock(title, text){
+    if(!text) return "";
+    return '<div class="detail-block"><h4>'+title+'</h4><p>'+escapeHtml(text)+'</p></div>';
+  }
+
+  async function deleteReport(id){
+    var ok = await deleteReportDoc(id);
+    if(ok){
+      removeLocalReport(id);
+      renderDashboard();
+      showToast("Reporte eliminado.");
+    }
+  }
+
+  // ---------- Event wiring ----------
+  document.getElementById("btnNew").addEventListener("click", function(){
+    resetForm();
+    showView("view-form");
+  });
+  document.getElementById("btnBackFromForm").addEventListener("click", function(){ showView("view-dashboard"); });
+  document.getElementById("btnBackFromDetail").addEventListener("click", function(){ showView("view-dashboard"); });
+  document.getElementById("btnCancelForm").addEventListener("click", function(){ showView("view-dashboard"); });
+  document.getElementById("btnSaveForm").addEventListener("click", saveForm);
+
+  document.getElementById("probabilidad").addEventListener("change", updateRiskPreview);
+  document.getElementById("impacto").addEventListener("change", updateRiskPreview);
+
+  document.getElementById("btnAddPhoto").addEventListener("click", function(){
+    document.getElementById("photoInput").click();
+  });
+  document.getElementById("photoInput").addEventListener("change", function(e){
+    var file = e.target.files[0];
+    if(!file) return;
+    compressImage(file, function(dataUrl){
+      currentPhotoDataUrl = dataUrl;
+      setPhotoPreview(dataUrl);
+    });
+  });
+  document.getElementById("btnRemovePhoto").addEventListener("click", function(){
+    currentPhotoDataUrl = null;
+    setPhotoPreview(null);
+    document.getElementById("photoInput").value = "";
+  });
+
+  document.getElementById("searchInput").addEventListener("input", renderDashboard);
+  document.getElementById("riskFilter").addEventListener("change", renderDashboard);
+  document.getElementById("btnToggleHistory").addEventListener("click", async function(){
+    var btn = document.getElementById("btnToggleHistory");
+    if(historicalLoaded){
+      showOnlyRecentLocally();
+      renderDashboard();
+    } else {
+      var original = btn.textContent;
+      btn.textContent = "Cargando…";
+      btn.disabled = true;
+      await loadFullHistory();
+      btn.disabled = false;
+      renderDashboard();
+    }
+  });
+  document.getElementById("statusTabs").addEventListener("click", function(e){
+    var btn = e.target.closest("button");
+    if(!btn) return;
+    document.querySelectorAll("#statusTabs button").forEach(function(b){ b.classList.remove("active"); });
+    btn.classList.add("active");
+    currentStatusFilter = btn.dataset.status;
+    renderDashboard();
+  });
+
+  document.getElementById("btnCancelDelete").addEventListener("click", function(){
+    document.getElementById("deleteModal").classList.remove("show");
+    pendingDeleteId = null;
+    pendingDeleteUserEmail = null;
+  });
+  document.getElementById("btnConfirmDelete").addEventListener("click", async function(){
+    document.getElementById("deleteModal").classList.remove("show");
+    if(pendingDeleteId){
+      await deleteReport(pendingDeleteId);
+      showView("view-dashboard");
+      pendingDeleteId = null;
+    } else if(pendingDeleteUserEmail){
+      var okDel = await deleteUserDoc(pendingDeleteUserEmail);
+      if(okDel){
+        usersConfig.users = usersConfig.users.filter(function(u){ return u.email !== pendingDeleteUserEmail; });
+        renderUsersList();
+        showToast("Supervisor eliminado.");
+      }
+      pendingDeleteUserEmail = null;
+    }
+  });
+
+  // ---------- Auth: header + login screen ----------
+  function renderHeaderForSession(){
+    var headerActions = document.getElementById("headerActions");
+    var badge = document.getElementById("userBadge");
+    var adminBtn = document.getElementById("btnAdminPanel");
+    if(!session){
+      headerActions.style.display = "none";
+      return;
+    }
+    headerActions.style.display = "flex";
+    if(session.type === "admin"){
+      badge.innerHTML = '<span class="who">Administrador</span><span class="role-tag">Admin</span>';
+      adminBtn.style.display = "inline-block";
+    } else {
+      badge.innerHTML = '<span class="who">'+escapeHtml(session.nombre)+'</span><span class="role-tag">Supervisor</span>';
+      adminBtn.style.display = "none";
+    }
+  }
+
+  function showLoginScreen(){
+    session = null;
+    renderHeaderForSession();
+    document.getElementById("setupBlock").style.display = adminConfig.passwordHash ? "none" : "block";
+    document.getElementById("loginBlock").style.display = adminConfig.passwordHash ? "block" : "none";
+    document.getElementById("loginError").classList.remove("show");
+    showView("view-login");
+  }
+
+  function afterLogin(){
+    renderHeaderForSession();
+    renderDashboard();
+    showView("view-dashboard");
+  }
+
+  document.getElementById("btnSetupSave").addEventListener("click", async function(){
+    var p1 = document.getElementById("setupPassword").value;
+    var p2 = document.getElementById("setupPasswordConfirm").value;
+    var err = document.getElementById("setupError");
+    err.classList.remove("show");
+    if(!p1 || p1.length < 4){
+      err.textContent = "La contraseña debe tener al menos 4 caracteres.";
+      err.classList.add("show");
+      return;
+    }
+    if(p1 !== p2){
+      err.textContent = "Las contraseñas no coinciden.";
+      err.classList.add("show");
+      return;
+    }
+    adminConfig.passwordHash = await hashText(p1);
+    var ok = await persistAdminConfig();
+    if(ok){
+      document.getElementById("setupPassword").value = "";
+      document.getElementById("setupPasswordConfirm").value = "";
+      showToast("Acceso de administrador configurado.");
+      showLoginScreen();
+    } else {
+      err.textContent = "No se pudo guardar. Intenta de nuevo.";
+      err.classList.add("show");
+    }
+  });
+
+  function switchLoginTab(role){
+    document.getElementById("tabSupervisor").classList.toggle("active", role === "supervisor");
+    document.getElementById("tabAdmin").classList.toggle("active", role === "admin");
+    document.getElementById("supervisorLoginFields").style.display = role === "supervisor" ? "block" : "none";
+    document.getElementById("adminLoginFields").style.display = role === "admin" ? "block" : "none";
+    document.getElementById("loginError").classList.remove("show");
+  }
+  document.getElementById("tabSupervisor").addEventListener("click", function(){ switchLoginTab("supervisor"); });
+  document.getElementById("tabAdmin").addEventListener("click", function(){ switchLoginTab("admin"); });
+
+  document.getElementById("btnLogin").addEventListener("click", async function(){
+    var role = document.getElementById("tabAdmin").classList.contains("active") ? "admin" : "supervisor";
+    var errEl = document.getElementById("loginError");
+    errEl.classList.remove("show");
+    if(role === "admin"){
+      var pass = document.getElementById("adminPasswordInput").value;
+      var hash = await hashText(pass);
+      if(adminConfig.passwordHash && hash === adminConfig.passwordHash){
+        session = { type: "admin" };
+        document.getElementById("adminPasswordInput").value = "";
+        afterLogin();
+      } else {
+        errEl.textContent = "Contraseña de administrador incorrecta.";
+        errEl.classList.add("show");
+      }
+    } else {
+      var email = document.getElementById("loginEmail").value.trim().toLowerCase();
+      var pass2 = document.getElementById("loginPassword").value;
+      var hash2 = await hashText(pass2);
+      var user = usersConfig.users.find(function(u){ return u.email.toLowerCase() === email; });
+      if(user && user.passwordHash === hash2){
+        session = { type: "supervisor", email: user.email, nombre: user.nombre };
+        document.getElementById("loginEmail").value = "";
+        document.getElementById("loginPassword").value = "";
+        afterLogin();
+      } else {
+        errEl.textContent = "Correo o contraseña incorrectos.";
+        errEl.classList.add("show");
+      }
+    }
+  });
+
+  document.getElementById("btnLogout").addEventListener("click", function(){
+    showLoginScreen();
+  });
+
+  document.querySelectorAll(".pw-toggle").forEach(function(btn){
+    btn.addEventListener("click", function(){
+      var target = document.getElementById(btn.dataset.target);
+      if(target.type === "password"){ target.type = "text"; btn.textContent = "Ocultar"; }
+      else { target.type = "password"; btn.textContent = "Ver"; }
+    });
+  });
+
+  // ---------- Admin panel ----------
+  document.getElementById("btnAdminPanel").addEventListener("click", function(){
+    renderUsersList();
+    showView("view-admin");
+  });
+  document.getElementById("btnBackFromAdmin").addEventListener("click", function(){ showView("view-dashboard"); });
+
+  document.getElementById("btnChangeAdminPassword").addEventListener("click", async function(){
+    var newPass = document.getElementById("adminNewPassword").value;
+    if(!newPass || newPass.length < 4){ showToast("La contraseña debe tener al menos 4 caracteres."); return; }
+    adminConfig.passwordHash = await hashText(newPass);
+    var ok = await persistAdminConfig();
+    if(ok){
+      document.getElementById("adminNewPassword").value = "";
+      showToast("Contraseña de administrador actualizada.");
+    }
+  });
+
+  function renderUsersList(){
+    var wrap = document.getElementById("usersList");
+    wrap.innerHTML = "";
+    if(usersConfig.users.length === 0){
+      wrap.innerHTML = '<p class="hint">Aún no hay supervisores registrados.</p>';
+      return;
+    }
+    usersConfig.users.forEach(function(u){
+      var row = document.createElement("div");
+      row.className = "user-row";
+      row.innerHTML =
+        '<div class="info"><div class="name">'+escapeHtml(u.nombre)+'</div><div class="email">'+escapeHtml(u.email)+'</div></div>' +
+        '<div class="actions">' +
+          '<button class="icon-btn" data-action="edit" data-email="'+escapeHtml(u.email)+'" aria-label="Editar">✎</button>' +
+          '<button class="icon-btn danger" data-action="remove" data-email="'+escapeHtml(u.email)+'" aria-label="Eliminar">✕</button>' +
+        '</div>';
+      wrap.appendChild(row);
+    });
+    wrap.querySelectorAll('[data-action="edit"]').forEach(function(btn){
+      btn.addEventListener("click", function(){ openUserForm(btn.getAttribute("data-email")); });
+    });
+    wrap.querySelectorAll('[data-action="remove"]').forEach(function(btn){
+      btn.addEventListener("click", function(){
+        pendingDeleteUserEmail = btn.getAttribute("data-email");
+        pendingDeleteId = null;
+        document.getElementById("deleteModal").classList.add("show");
+      });
+    });
+  }
+
+  document.getElementById("btnAddUser").addEventListener("click", function(){ openUserForm(null); });
+
+  function csvEscape(value){
+    var s = value == null ? "" : String(value);
+    if(/[",\n]/.test(s)){
+      s = '"' + s.replace(/"/g, '""') + '"';
+    }
+    return s;
+  }
+
+  document.getElementById("btnExportCsv").addEventListener("click", async function(){
+    var btn = document.getElementById("btnExportCsv");
+    var original = btn.textContent;
+    btn.textContent = "Preparando archivo…";
+    btn.disabled = true;
+    try{
+      await loadFullHistory();
+      var cols = [
+        "id","fecha","hora","turno","lugar","supervisor","descripcion",
+        "probabilidad","impacto","riesgoNivel","expuestos","accionesInmediatas",
+        "recomendaciones","responsable","plazo","estado","createdAt","updatedAt"
+      ];
+      var rows = [cols.join(",")];
+      state.reports.forEach(function(r){
+        rows.push(cols.map(function(c){ return csvEscape(r[c]); }).join(","));
+      });
+      var csvContent = rows.join("\n");
+      var blob = new Blob(["\uFEFF" + csvContent], { type: "text/csv;charset=utf-8;" });
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement("a");
+      var today = new Date().toISOString().slice(0,10);
+      a.href = url;
+      a.download = "bitacora-seguridad-" + today + ".csv";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast("Se descargaron " + state.reports.length + " reporte(s).");
+    } finally {
+      btn.textContent = original;
+      btn.disabled = false;
+    }
+  });
+  document.getElementById("btnBackFromUserForm").addEventListener("click", function(){ showView("view-admin"); });
+  document.getElementById("btnCancelUserForm").addEventListener("click", function(){ showView("view-admin"); });
+
+  function openUserForm(email){
+    currentEditUserEmail = email;
+    ["f-userNombre","f-userEmail","f-userPassword"].forEach(function(id){ document.getElementById(id).classList.remove("invalid"); });
+    var pwLabel = document.getElementById("userPasswordLabel");
+    var pwHint = document.getElementById("userPasswordHint");
+    if(email){
+      var u = usersConfig.users.find(function(x){ return x.email === email; });
+      document.getElementById("userFormTitle").textContent = "Editar supervisor";
+      document.getElementById("userNombre").value = u ? u.nombre : "";
+      document.getElementById("userEmail").value = u ? u.email : "";
+      document.getElementById("userEmail").disabled = true;
+      document.getElementById("userPassword").value = "";
+      pwLabel.textContent = "Nueva contraseña (opcional)";
+      pwHint.textContent = "Déjalo en blanco para mantener la contraseña actual.";
+    } else {
+      document.getElementById("userFormTitle").textContent = "Agregar supervisor";
+      document.getElementById("userNombre").value = "";
+      document.getElementById("userEmail").value = "";
+      document.getElementById("userEmail").disabled = false;
+      document.getElementById("userPassword").value = "";
+      pwLabel.textContent = "Contraseña asignada";
+      pwHint.textContent = "Compártela con el supervisor por un medio seguro.";
+    }
+    showView("view-user-form");
+  }
+
+  document.getElementById("btnSaveUserForm").addEventListener("click", async function(){
+    var nombre = document.getElementById("userNombre").value.trim();
+    var email = document.getElementById("userEmail").value.trim().toLowerCase();
+    var pass = document.getElementById("userPassword").value;
+    ["f-userNombre","f-userEmail","f-userPassword"].forEach(function(id){ document.getElementById(id).classList.remove("invalid"); });
+    var ok = true;
+    if(!nombre){ document.getElementById("f-userNombre").classList.add("invalid"); ok = false; }
+    var emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    if(!emailValid){ document.getElementById("f-userEmail").classList.add("invalid"); ok = false; }
+    if(!currentEditUserEmail && !pass){ document.getElementById("f-userPassword").classList.add("invalid"); ok = false; }
+    if(!ok){ showToast("Revisa los campos marcados."); return; }
+
+    var userToSave;
+    if(currentEditUserEmail){
+      var idx = usersConfig.users.findIndex(function(u){ return u.email === currentEditUserEmail; });
+      var existingHash = idx > -1 ? usersConfig.users[idx].passwordHash : null;
+      userToSave = {
+        email: currentEditUserEmail,
+        nombre: nombre,
+        passwordHash: pass ? await hashText(pass) : existingHash
+      };
+    } else {
+      var exists = usersConfig.users.some(function(u){ return u.email === email; });
+      if(exists){ showToast("Ya existe un supervisor con ese correo."); return; }
+      userToSave = { email: email, nombre: nombre, passwordHash: await hashText(pass) };
+    }
+    var saved = await saveUserDoc(userToSave);
+    if(saved){
+      var i = usersConfig.users.findIndex(function(u){ return u.email === userToSave.email; });
+      if(i > -1) usersConfig.users[i] = userToSave; else usersConfig.users.push(userToSave);
+      showToast("Supervisor guardado.");
+      showView("view-admin");
+      renderUsersList();
+    }
+  });
+
+  // ---------- Init ----------
+  async function init(){
+    if(!window.FIREBASE_CONFIG || !window.FIREBASE_CONFIG.projectId){
+      document.getElementById("dashboardLoading").style.display = "none";
+      document.getElementById("view-login").innerHTML =
+        '<div class="login-wrap"><div class="login-card">' +
+        '<h2>Falta configurar Firebase</h2>' +
+        '<p class="sub">Edita <strong>firebase-config.js</strong> con los datos de tu proyecto de Firebase (ver README.md) y vuelve a cargar esta página.</p>' +
+        '</div></div>';
+      showView("view-login");
+      return;
+    }
+    try{
+      var app = window.fbApp.initializeApp(window.FIREBASE_CONFIG);
+      db = window.fbApp.getFirestore(app);
+    }catch(e){
+      console.error(e);
+      showToast("No se pudo conectar con la base de datos.");
+      return;
+    }
+    await loadAdminConfig();
+    await loadUsersConfig();
+    await loadRecentReports();
+    document.getElementById("dashboardLoading").style.display = "none";
+    document.getElementById("dashboardContent").style.display = "block";
+    showLoginScreen();
+  }
+  init();
+
+})();
+</script>
+<script>
+  if("serviceWorker" in navigator){
+    window.addEventListener("load", function(){
+      navigator.serviceWorker.register("./sw.js").catch(function(err){
+        console.error("No se pudo registrar el service worker:", err);
+      });
+    });
+  }
+</script>
+</body>
+</html>
